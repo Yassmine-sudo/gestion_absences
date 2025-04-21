@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/Yassmine-sudo/gestion_absences.git'
+                git url: 'git@github.com:Yassmine-sudo/gestion_absences.git', credentialsId: '3'
             }
         }
 
