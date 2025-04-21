@@ -1,58 +1,68 @@
 pipeline {
-    agent any  // Utilise n'importe quel agent Jenkins disponible
+    agent any
 
     triggers {
-        githubPush()  // Déclenche la pipeline à chaque push sur GitHub
+        githubPush()
     }
 
     options {
-        timestamps()  // Ajoute des horodatages à chaque étape de la pipeline
+        timestamps()
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Utilisation de l'URL HTTPS pour récupérer le code
                 git url: 'https://github.com/Yassmine-sudo/gestion_absences.git'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                echo '🔧 Installation des dépendances avec npm...'
-                // Installation des dépendances avec npm
-                sh 'npm install'
+                echo "🔧 Installation de Node.js et des dépendances..."
+                sh '''
+                    # Installer Node.js v18 (moderne et stable)
+                    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+                    apt-get update
+                    apt-get install -y nodejs
+
+                    # Vérification
+                    node -v
+                    npm -v
+
+                    # Installer les dépendances du projet
+                    npm install
+                '''
             }
         }
 
         stage('Build') {
             steps {
-                echo '🏗️  Phase de construction...'
-                // Adapte cette étape selon tes besoins spécifiques de build (si nécessaire)
-                sh 'echo "Aucune étape de build spécifique pour ce projet."'
+                echo "🛠️ Build (non personnalisé pour le moment)"
+                sh 'echo "Pas de build spécifique encore."'
             }
         }
 
         stage('Test') {
             steps {
-                echo '🧪 Phase de test...'
-                // Tu peux ajouter tes tests ici si tu en as (ex: Jest pour Node.js)
-                sh 'echo "Pas encore de tests définis pour ce projet."'
+                echo "🧪 Tests (non configurés pour le moment)"
+                sh 'echo "Pas de tests définis."'
             }
         }
 
         stage('Deploy') {
             steps {
-                echo '🚀 Phase de déploiement...'
-                // Adapte cette étape en fonction de ton processus de déploiement (Docker, Kubernetes...)
-                sh 'echo "Pas encore de déploiement configuré."'
+                echo "🚀 Déploiement (placeholder)"
+                sh 'echo "Pas encore de stratégie de déploiement définie."'
             }
         }
     }
 
     post {
         success {
-            echo '✅ La pipeline a été a échoué !'
+            echo '✅ Pipeline terminée avec succès !'
+        }
+        failure {
+            echo '❌ Pipeline échouée.'
         }
     }
 }
