@@ -1,40 +1,33 @@
 pipeline {
-    agent any
-
+    agent {
+        docker {
+            image 'node:18'
+        }
+    }
     stages {
         stage('Checkout') {
             steps {
                 git 'https://github.com/Yassmine-sudo/gestion_absences.git'
             }
         }
-
         stage('Install Dependencies') {
             steps {
-                script {
-                    sh 'npm install'
-                }
+                sh 'npm install'
             }
         }
-
         stage('Run Tests') {
             steps {
-                script {
-                    sh 'npm test'
-                }
+                sh 'npm test'
             }
         }
-
         stage('Build') {
             steps {
-                script {
-                    sh 'npm run build'
-                }
+                sh 'npm run build'
             }
         }
-
         stage('Deploy') {
             steps {
-                echo 'Déploiement en cours...'
+                echo 'Deploying the application...'
             }
         }
     }
