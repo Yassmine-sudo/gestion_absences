@@ -1,12 +1,8 @@
 pipeline {
-    agent any
-
-    triggers {
-        githubPush()
-    }
-
-    options {
-        timestamps()
+    agent {
+        docker {
+            image 'node:18' // image officielle Node.js avec npm inclus
+        }
     }
 
     stages {
@@ -18,18 +14,10 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                echo "🔧 Installation de Node.js et des dépendances..."
+                echo "🔧 Installation des dépendances..."
                 sh '''
-                    # Installer Node.js v18 (moderne et stable)
-                    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-                    apt-get update
-                    apt-get install -y nodejs
-
-                    # Vérification
                     node -v
                     npm -v
-
-                    # Installer les dépendances du projet
                     npm install
                 '''
             }
@@ -37,29 +25,29 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo "🛠️ Build (non personnalisé pour le moment)"
-                sh 'echo "Pas de build spécifique encore."'
+                echo "🛠️ Build..."
+                sh 'echo "Build en attente de script..."'
             }
         }
 
         stage('Test') {
             steps {
-                echo "🧪 Tests (non configurés pour le moment)"
-                sh 'echo "Pas de tests définis."'
+                echo "🧪 Tests..."
+                sh 'echo "Tests en attente de configuration..."'
             }
         }
 
         stage('Deploy') {
             steps {
-                echo "🚀 Déploiement (placeholder)"
-                sh 'echo "Pas encore de stratégie de déploiement définie."'
+                echo "🚀 Déploiement..."
+                sh 'echo "Déploiement non défini..."'
             }
         }
     }
 
     post {
         success {
-            echo '✅ Pipeline terminée avec succès !'
+            echo '✅ Pipeline OK !'
         }
         failure {
             echo '❌ Pipeline échouée.'
