@@ -6,7 +6,7 @@ services:
     container_name: jenkins-test
     restart: always
     ports:
-      - "8086:8080"      # Port Jenkins
+      - "8088:8080"      # Port Jenkins
       - "50000:50000"    # Port pour les agents Jenkins
     volumes:
       - jenkins_home:/var/jenkins_home  # Pour conserver les données de Jenkins même après redémarrage du conteneur
