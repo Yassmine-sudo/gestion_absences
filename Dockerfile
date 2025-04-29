@@ -21,10 +21,6 @@ RUN apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plug
 # Ajouter l'utilisateur jenkins au groupe docker
 RUN usermod -aG docker jenkins
 
-# Changer le groupe propriétaire et les permissions du socket Docker
-RUN chgrp docker /var/run/docker.sock && \
-    chmod g+rw /var/run/docker.sock
-
 # Nettoyer le cache d'apt
 RUN apt-get clean
 
