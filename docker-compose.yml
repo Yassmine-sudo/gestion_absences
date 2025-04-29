@@ -2,19 +2,18 @@ version: '3'
 
 services:
   jenkins:
-    image: jenkins/jenkins:lts
+    build: .
     container_name: jenkins-test
     restart: always
     ports:
-      - "8088:8080"      # Port Jenkins
-      - "50011:50000"    # Port pour les agents Jenkins
+      - "8088:8080"      # Jenkins UI
+      - "50011:50000"    # Jenkins agent
     volumes:
-      - jenkins_home:/var/jenkins_home  # Pour conserver les données de Jenkins même après redémarrage du conteneur
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock  # Accès Docker hôte
     networks:
       - jenkins_network
 
-  # Tu peux ajouter d'autres services ici si nécessaire (par exemple, une base de données pour Jenkins)
-  
 networks:
   jenkins_network:
     driver: bridge
