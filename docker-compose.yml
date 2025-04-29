@@ -1,4 +1,4 @@
-version: "3"
+version: "3.8"
 
 services:
   app:
@@ -6,11 +6,11 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/app
+    depends_on:
+      - selenium
 
   selenium:
     image: selenium/standalone-chrome
     ports:
       - "4444:4444"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
