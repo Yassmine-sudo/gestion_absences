@@ -1,0 +1,50 @@
+name: Deploy to Server via SSH and Docker Compose
+
+on:
+  push:
+    branches:
+      - main  # Déclenchement du déploiement lorsque des changements sont poussés sur la branche 'main'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3  # Récupère le code du dépôt
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3  # Configuration de l'agent SSH pour la connexion distante
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}  # Clé privée SSH stockée dans les secrets GitHub
+
+      - name: Connect to Server via SSH and Deploy
+        run: |
+          # Se connecter au serveur via SSH et exécuter les commandes nécessaires
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            # Se rendre dans le répertoire de l'application
+            cd /path/to/your/app || exit 1
+            # Mettre à jour le dépôt avec git pull
+            git pull origin main || exit 1
+            # Construire et redémarrer les services Docker
+            docker-compose -f docker-compose.yml down || exit 1
+            docker-compose -f docker-compose.yml build || exit 1
+            docker-compose -f docker-compose.yml up -d || exit 1
+            # Attendre que les services soient prêts (ajuster selon tes besoins)
+            sleep 10
+            # Exécuter des tests si tu en as
+            docker-compose exec -T app echo "Pas de tests définis pour le moment"
+          EOF
+
+      - name: Clean up after deploy
+        run: |
+          # Nettoyer les services (enlever les conteneurs après déploiement)
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            cd /path/to/your/app || exit 1
+            docker-compose -f docker-compose.yml down || exit 1
+          EOF
+
+    post:
+      always:
+        run: |
+          echo 'Pipeline terminé.'
