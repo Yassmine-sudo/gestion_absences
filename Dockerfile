@@ -2,7 +2,7 @@ FROM jenkins/jenkins:lts
 
 USER root
 
-# Installer les dépendances pour ajouter les clés et le dépôt Docker
+# Installer les dépendances pour ajouter les clés et le dépôt Docker test
 RUN apt-get update && \
     apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release --no-install-recommends
 
