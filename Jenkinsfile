@@ -12,7 +12,23 @@ pipeline {
                 sh 'ls -la'
             }
         }
+        stage('Vérification Docker') {
+    steps {
+        sh 'which docker'
+        sh 'which docker compose'
+        sh 'docker --version'
+        sh 'docker compose version'
+        sh 'env'
+    }
+}
 
+stage('Construire les conteneurs') {
+    steps {
+        sh 'docker compose -f docker-compose.yml down || true'
+        sh 'docker compose -f docker-compose.yml build'
+    }
+}
+  
         stage('Construire les conteneurs') {
             steps {
                 sh 'docker compose -f docker-compose.yml down || true'
