@@ -15,6 +15,8 @@ RUN apt-get update && \
     apt-get update && \
     apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin && \
     usermod -aG docker jenkins && \
+    chgrp docker /run/docker.sock && \
+    chmod g+rw /run/docker.sock && \
     apt-get clean
 
 USER jenkins
