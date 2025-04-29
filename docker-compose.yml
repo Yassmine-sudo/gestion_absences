@@ -1,14 +1,31 @@
+version: '3'
 services:
-  app:
-    build: .
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins-docker
     ports:
-      - "3000:3000"
+      - "8087:8080"  # expose Jenkins sur le port 8087
+      - "50000:50000"  # expose le port pour les connexions des agents
     volumes:
-      - .:/app
-    depends_on:
-      - selenium
+      - jenkins_home:/var/jenkins_home  # persister les données de Jenkins
+      - /var/run/docker.sock:/var/run/docker.sock  # permettre à Jenkins d'utiliser Docker
+    environment:
+      - JENKINS_OPTS=--prefix=/jenkins  # si tu veux un préfixe dans l'URL de Jenkins
+    networks:
+      - jenkins_network
 
-  selenium:
-    image: selenium/standalone-chrome
-    ports:
-      - "4444:4444"
+  # Ajoute d'autres services si nécessaire, par exemple un conteneur Docker pour exécuter des builds
+  # docker:
+  #   image: docker:latest
+  #   privileged: true  # nécessaire pour que Jenkins puisse utiliser Docker à l'intérieur du conteneur
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   networks:
+  #     - jenkins_network
+
+volumes:
+  jenkins_home:
+
+networks:
+  jenkins_network:
+    driver: bridge
