@@ -3,7 +3,7 @@ version: '3'
 services:
   jenkins:
     image: jenkins/jenkins:lts
-    container_name: jenkins
+    container_name: jenkins-test
     restart: always
     ports:
       - "8086:8080"      # Port Jenkins
