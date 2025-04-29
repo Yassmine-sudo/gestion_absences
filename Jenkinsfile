@@ -15,14 +15,14 @@ pipeline {
 
         stage('Construire les conteneurs') {
             steps {
-                sh 'docker-compose -f docker-compose.yml down || true'
-                sh 'docker-compose -f docker-compose.yml build'
+                sh 'docker compose -f docker-compose.yml down || true'
+                sh 'docker compose -f docker-compose.yml build'
             }
         }
 
         stage('Lancer l\'application') {
             steps {
-                sh 'docker-compose -f docker-compose.yml up -d'
+                sh 'docker compose -f docker-compose.yml up -d'
                 sh 'sleep 10' // attendre que les services démarrent
             }
         }
@@ -30,13 +30,13 @@ pipeline {
         stage('Exécuter les tests (si applicable)') {
             steps {
                 // Exemple générique — adapte-le si tu as des tests à exécuter dans le conteneur
-                sh 'docker-compose exec -T app echo "Pas de tests définis pour le moment"'
+                sh 'docker compose exec -T app echo "Pas de tests définis pour le moment"'
             }
         }
 
         stage('Nettoyage') {
             steps {
-                sh 'docker-compose -f docker-compose.yml down'
+                sh 'docker compose -f docker-compose.yml down'
             }
         }
     }
