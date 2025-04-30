@@ -31,7 +31,7 @@ RUN curl -SL https://github.com/docker/compose/releases/latest/download/docker-c
     ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
 # Ajouter l'utilisateur Jenkins au groupe Docker
-RUN groupadd docker && usermod -aG docker jenkins
+RUN groupadd -f docker && usermod -aG docker jenkins
 
 # Nettoyage
 RUN apt-get clean
