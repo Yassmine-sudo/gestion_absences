@@ -1,25 +1,45 @@
-# Utiliser une image de base officielle Ubuntu
-FROM ubuntu:20.04
+FROM jenkins/jenkins:lts
 
-# Installer les dépendances nécessaires : Docker, Ansible, Python, etc.
+USER root
+
+# Installer les dépendances de base
 RUN apt-get update && apt-get install -y \
+    curl \
+    sudo \
+    gnupg \
+    ca-certificates \
+    lsb-release \
+    apt-transport-https \
     python3-pip \
     sshpass \
     git \
-    curl \
-    sudo \
-    && pip3 install ansible \
-    && rm -rf /var/lib/apt/lists/*
+    --no-install-recommends
 
-# Créer le groupe docker et ajouter l'utilisateur Jenkins
-RUN groupadd -g 999 docker && usermod -aG docker jenkins
+# Ajouter la clé GPG officielle de Docker
+RUN install -m 0755 -d /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    chmod a+r /etc/apt/keyrings/docker.gpg
 
-# Installer Docker et Docker-compose
-RUN curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh
-RUN curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose
+# Ajouter le dépôt Docker compatible avec Debian
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+    $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-# Définir le répertoire de travail par défaut
-WORKDIR /workspace
+# Installer Docker CLI et plugins
+RUN apt-get update && apt-get install -y \
+    docker-ce \
+    docker-ce-cli \
+    containerd.io \
+    docker-buildx-plugin \
+    docker-compose-plugin
 
-# Entrée par défaut (optionnel)
-ENTRYPOINT ["bash"]
+# Installer Ansible via pip
+RUN pip3 install --no-cache-dir ansible
+
+# Ajouter l'utilisateur jenkins au groupe docker (il existe déjà)
+RUN groupadd -f docker && usermod -aG docker jenkins
+
+# Nettoyer
+RUN apt-get clean
+
+# Revenir à l'utilisateur Jenkins
+USER jenkins
