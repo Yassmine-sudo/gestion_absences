@@ -33,7 +33,7 @@ RUN curl -SL https://github.com/docker/compose/releases/latest/download/docker-c
 RUN groupadd -f docker && usermod -aG docker jenkins
 
 # Donner accès au socket à Jenkins via son groupe
-RUN chown root:docker /var/run/docker.sock && chmod 660 /var/run/docker.sock
+
 
 # Nettoyer
 RUN apt-get clean
