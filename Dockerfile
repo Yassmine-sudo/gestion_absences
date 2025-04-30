@@ -2,25 +2,17 @@ FROM jenkins/jenkins:lts
 
 USER root
 
-# Installer les dépendances pour ajouter les clés et le dépôt Docker
-RUN apt-get update && \
-    apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release --no-install-recommends
+# Installer les dépendances pour curl
+RUN apt-get update && apt-get install -y curl --no-install-recommends
 
-# Ajouter la clé GPG de Docker
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker.gpg
+# Télécharger la dernière version de docker-compose depuis GitHub Releases
+RUN curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
 
-# Ajouter le dépôt Docker à la liste des sources
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
+# Rendre l'exécutable
+RUN chmod +x /usr/local/bin/docker-compose
 
-# Mettre à jour les listes de paquets après avoir ajouté le dépôt Docker
-RUN apt-get update
-
-# Installer Docker Engine et la CLI
-RUN apt-get install -y docker-ce docker-ce-cli containerd.io --no-install-recommends
-
-# Installer Docker Compose via pip en forçant l'installation
-RUN apt-get update && apt-get install -y python3 python3-pip --no-install-recommends
-RUN pip3 install --break-system-packages docker-compose
+# Créer un lien symbolique pour que 'docker compose' fonctionne comme sous-commande de 'docker' (si nécessaire)
+RUN ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
 # Ajouter l'utilisateur jenkins au groupe docker
 RUN usermod -aG docker jenkins
