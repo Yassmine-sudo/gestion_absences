@@ -1,42 +1,25 @@
-FROM jenkins/jenkins:lts
+# Utiliser une image de base officielle Ubuntu
+FROM ubuntu:20.04
 
-USER root
-
-# Installer les dépendances
+# Installer les dépendances nécessaires : Docker, Ansible, Python, etc.
 RUN apt-get update && apt-get install -y \
+    python3-pip \
+    sshpass \
+    git \
     curl \
     sudo \
-    gnupg \
-    ca-certificates \
-    lsb-release \
-    apt-transport-https \
-    --no-install-recommends
+    && pip3 install ansible \
+    && rm -rf /var/lib/apt/lists/*
 
-# Ajouter la clé GPG officielle de Docker
-RUN install -m 0755 -d /etc/apt/keyrings && \
-    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
-    chmod a+r /etc/apt/keyrings/docker.gpg
+# Créer le groupe docker et ajouter l'utilisateur Jenkins
+RUN groupadd -g 999 docker && usermod -aG docker jenkins
 
-# Ajouter le dépôt Docker compatible avec Debian
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
-    $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+# Installer Docker et Docker-compose
+RUN curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh
+RUN curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose
 
-# Installer Docker CLI et plugins
-RUN apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+# Définir le répertoire de travail par défaut
+WORKDIR /workspace
 
-# Télécharger docker-compose (optionnel si tu veux une version spécifique)
-RUN curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose && \
-    chmod +x /usr/local/bin/docker-compose && \
-    ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
-
-# Créer le groupe docker si inexistant, et y ajouter jenkins
-RUN groupadd -f docker && usermod -aG docker jenkins
-
-# Donner accès au socket à Jenkins via son groupe
-
-
-# Nettoyer
-RUN apt-get clean
-
-# Revenir à l'utilisateur jenkins
-USER jenkins
+# Entrée par défaut (optionnel)
+ENTRYPOINT ["bash"]
