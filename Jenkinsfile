@@ -5,22 +5,22 @@ pipeline {
         COMPOSE_PROJECT_NAME = 'ci_project'
     }
 
+    tools {
+        git 'Default' // Déclare l'outil git ici au niveau du pipeline
+    }
+
     stages {
         stage('Cloner le dépôt') {
-            agent {
-                tools {
-                    git 'Default'
-                }
-            }
             steps {
                 git url: 'https://github.com/Yassmine-sudo/gestion_absences.git', branch: 'master'
                 sh 'ls -la'
             }
         }
+
         stage('Vérification Docker') {
             steps {
                 sh 'which docker'
-                sh 'which docker compose'
+                sh 'which docker-compose'
                 sh 'docker --version'
                 sh 'docker compose version'
                 sh 'env'
@@ -37,7 +37,7 @@ pipeline {
         stage('Lancer l\'application') {
             steps {
                 sh 'docker compose -f docker-compose.yml up -d'
-                sh 'sleep 10' // attendre que les services démarrent
+                sh 'sleep 10' // Attendre que les services démarrent
             }
         }
 
