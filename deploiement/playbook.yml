@@ -1,0 +1,25 @@
+# deploiement/playbook.yml
+
+- name: Déploiement de l'application avec Docker
+  hosts: localhost
+  become: yes  # Nécessaire si tu as besoin des privilèges root pour manipuler Docker
+  tasks:
+
+    - name: S'assurer que Docker est installé
+      package:
+        name: docker
+        state: present
+
+    - name: S'assurer que Docker Compose est installé
+      package:
+        name: docker-compose
+        state: present
+
+    - name: Démarrer le conteneur Docker pour l'application
+      docker_compose:
+        project_src: /workspace  # Assure-toi que c'est le bon chemin
+        restarted: yes
+
+    - name: Afficher un message indiquant que le déploiement est terminé
+      debug:
+        msg: "Le déploiement a été effectué avec succès."
