@@ -32,8 +32,8 @@ RUN apt-get update && apt-get install -y \
     docker-buildx-plugin \
     docker-compose-plugin
 
-# Installer Ansible via pip
-RUN pip3 install --no-cache-dir ansible
+# Installer Ansible
+RUN pip3 install --no-cache-dir --break-system-packages ansible
 
 # Ajouter l'utilisateur jenkins au groupe docker (il existe déjà)
 RUN groupadd -f docker && usermod -aG docker jenkins
