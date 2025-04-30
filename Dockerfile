@@ -14,6 +14,9 @@ RUN chmod +x /usr/local/bin/docker-compose
 # Créer un lien symbolique pour que 'docker compose' fonctionne comme sous-commande de 'docker' (si nécessaire)
 RUN ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
+# Créer le groupe docker
+RUN groupadd docker
+
 # Ajouter l'utilisateur jenkins au groupe docker
 RUN usermod -aG docker jenkins
 
