@@ -62,7 +62,7 @@ pipeline {
                 script {
                     sh '''
                     docker run --rm -v /var/jenkins_home/workspace/test-compose:/workspace -w /workspace/deploiement my-app-with-ansible ansible-playbook /workspace/deploiement/playbook.yml
-                    
+                    '''
                 }
             }
         }
@@ -77,8 +77,8 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    for container in $(docker ps -a --format "{{.Names}}" | grep -v jenkins-test); do
-                        docker rm -f $container || echo "Échec suppression $container"
+                    docker ps -a --format "{{.Names}}" | grep -v jenkins-test | while read container; do
+                        docker rm -f "$container" || echo "Échec suppression $container"
                     done
                     '''
                 }
