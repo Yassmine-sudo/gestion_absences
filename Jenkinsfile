@@ -6,7 +6,7 @@ pipeline {
     }
 
     tools {
-        git 'Default' // Déclare l'outil git ici au niveau du pipeline
+        git 'Git'  // Utilise 'Git' au lieu de 'Default'
     }
 
     stages {
