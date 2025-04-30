@@ -24,7 +24,7 @@ pipeline {
 
         stage('Construire les conteneurs') {
             steps {
-                sh 'docker compose -f docker-compose.yml down || true'
+                sh 'docker compose -f docker-compose.yml down --remove-orphans || true'
                 sh 'docker compose -f docker-compose.yml build'
             }
         }
