@@ -5,10 +5,6 @@ pipeline {
         COMPOSE_PROJECT_NAME = 'ci_project'
     }
 
-    tools {
-        git 'Git'  // Utilise 'Git' au lieu de 'Default'
-    }
-
     stages {
         stage('Cloner le dépôt') {
             steps {
