@@ -61,11 +61,8 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    docker run --rm \
-                    -v $PWD:/workspace \
-                    -w /workspace/deploiement \
-                    my-app-with-ansible ansible-playbook /workspace/deploiement/playbook.yml
-                    '''
+                    docker run --rm -v /var/jenkins_home/workspace/test-compose:/workspace -w /workspace/deploiement my-app-with-ansible ansible-playbook /workspace/deploiement/playbook.yml
+                    
                 }
             }
         }
