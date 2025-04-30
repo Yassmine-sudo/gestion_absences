@@ -1,40 +1,39 @@
-# Utiliser l'image officielle de Jenkins LTS
 FROM jenkins/jenkins:lts
 
-# Passer en mode root pour installer Docker et autres dépendances
 USER root
 
-# Mettre à jour les packages et installer les dépendances pour curl et Docker
+# Installer les dépendances
 RUN apt-get update && apt-get install -y \
     curl \
     sudo \
-    lsb-release \
+    gnupg \
     ca-certificates \
+    lsb-release \
     apt-transport-https \
-    gnupg2 \
     --no-install-recommends
 
-# Ajouter le dépôt Docker officiel pour installer Docker
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/trusted.gpg.d/docker.asc
-RUN echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
+# Ajouter la clé GPG officielle de Docker
+RUN install -m 0755 -d /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Ajouter le dépôt Docker compatible avec Debian
+RUN echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+  $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 # Installer Docker
-RUN apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
+RUN apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-# Télécharger Docker Compose
-RUN curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+# Télécharger docker-compose (optionnel si tu veux une version spécifique)
+RUN curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose && \
+    chmod +x /usr/local/bin/docker-compose && \
+    ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
-# Rendre Docker Compose exécutable
-RUN chmod +x /usr/local/bin/docker-compose
-
-# Créer un lien symbolique pour docker-compose
-RUN ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
-
-# Créer un groupe docker et ajouter l'utilisateur Jenkins au groupe Docker
+# Ajouter l'utilisateur Jenkins au groupe Docker
 RUN groupadd docker && usermod -aG docker jenkins
 
-# Nettoyer le cache apt
+# Nettoyage
 RUN apt-get clean
 
-# Passer de nouveau à l'utilisateur Jenkins pour les étapes suivantes
 USER jenkins
