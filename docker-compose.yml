@@ -1,22 +1,25 @@
 services:
   jenkins:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: my-app-with-ansible    # Image nommée pour réutilisation
     container_name: jenkins-test
     restart: always
     ports:
-      - "8088:8080"      # Jenkins UI
-      - "50011:50000"    # Jenkins agent
+      - "8088:8080"
+      - "50011:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock   # ⬅️ Montage du socket Docker
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - jenkins_network
-    user: root   # ⬅️ Exécuter initialement en root pour manipuler le socket
-
-networks:
-  jenkins_network:
-    driver: bridge
+    user: root   # Nécessaire pour gérer Docker et éviter permissions
 
 volumes:
   jenkins_home:
     driver: local
+
+networks:
+  jenkins_network:
+    driver: bridge
