@@ -60,8 +60,18 @@ pipeline {
         stage('Déploiement avec Ansible') {
             steps {
                 script {
+                    // Ajouter une étape pour vérifier que le fichier playbook.yml existe dans le répertoire de déploiement
+                    sh 'ls -la /var/jenkins_home/workspace/${JOB_NAME}/deploiement || echo "Le dossier de déploiement est vide !"'
+                    
+                    // Utilisation de "docker run" avec une vérification préalable de l'existence du fichier playbook.yml
                     sh '''
-                    docker run --rm -v /var/jenkins_home/workspace/test-compose:/workspace -w /workspace/deploiement my-app-with-ansible ansible-playbook /workspace/deploiement/playbook.yml
+                    if [ -f /var/jenkins_home/workspace/${JOB_NAME}/deploiement/playbook.yml ]; then
+                        echo "Le playbook.yml existe, on peut lancer Ansible."
+                        docker run --rm -v /var/jenkins_home/workspace/${JOB_NAME}:/workspace -w /workspace/deploiement my-app-with-ansible ansible-playbook /workspace/deploiement/playbook.yml
+                    else
+                        echo "Erreur : Le fichier playbook.yml est introuvable !"
+                        exit 1
+                    fi
                     '''
                 }
             }
