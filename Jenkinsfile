@@ -7,14 +7,17 @@ pipeline {
 
     stages {
         stage('Cloner le dépôt') {
-            agent { tools { git 'Default' } } // Spécifier l'outil Git
+            agent {
+                tools {
+                    git 'Default'
+                }
+            }
             steps {
                 git url: 'https://github.com/Yassmine-sudo/gestion_absences.git', branch: 'master'
                 sh 'ls -la'
             }
         }
         stage('Vérification Docker') {
-            agent { tools { git 'Default' } } // Spécifier l'outil Git (bien que pas strictement nécessaire ici)
             steps {
                 sh 'which docker'
                 sh 'which docker compose'
@@ -25,7 +28,6 @@ pipeline {
         }
 
         stage('Construire les conteneurs') {
-            agent { tools { git 'Default' } } // Spécifier l'outil Git (bien que pas strictement nécessaire ici)
             steps {
                 sh 'docker compose -f docker-compose.yml down --remove-orphans || true'
                 sh 'docker compose -f docker-compose.yml build'
@@ -33,7 +35,6 @@ pipeline {
         }
 
         stage('Lancer l\'application') {
-            agent { tools { git 'Default' } } // Spécifier l'outil Git (bien que pas strictement nécessaire ici)
             steps {
                 sh 'docker compose -f docker-compose.yml up -d'
                 sh 'sleep 10' // attendre que les services démarrent
@@ -41,7 +42,6 @@ pipeline {
         }
 
         stage('Exécuter les tests (si applicable)') {
-            agent { tools { git 'Default' } } // Spécifier l'outil Git (bien que pas strictement nécessaire ici)
             steps {
                 // Exemple générique — adapte-le si tu as des tests à exécuter dans le conteneur
                 sh 'docker compose exec -T app echo "Pas de tests définis pour le moment"'
@@ -49,7 +49,6 @@ pipeline {
         }
 
         stage('Nettoyage') {
-            agent { tools { git 'Default' } } // Spécifier l'outil Git (bien que pas strictement nécessaire ici)
             steps {
                 sh 'docker compose -f docker-compose.yml down'
             }
