@@ -29,7 +29,6 @@ pipeline {
         stage('Construire l\'image Docker avec Ansible') {
             steps {
                 script {
-                    // Construire l'image Docker avec Ansible
                     sh 'docker build -t my-app-with-ansible .'
                 }
             }
@@ -45,18 +44,22 @@ pipeline {
         stage('Lancer l\'application') {
             steps {
                 timeout(time: 2, unit: 'MINUTES') {
-                    sh 'docker compose up -d || echo "Erreur lors du démarrage des conteneurs !"'
+                    sh '''
+                    if [ ! "$(docker ps -a -q -f name=jenkins-test)" ]; then
+                        docker compose up -d
+                    else
+                        echo "Le conteneur 'jenkins-test' existe déjà, on le laisse tourner."
+                    fi
+                    '''
                 }
                 sh 'sleep 10'
                 sh 'docker ps || echo "Aucun conteneur en cours d\'exécution !"'
             }
         }
 
-        // Stage d'exécution Ansible
         stage('Déploiement avec Ansible') {
             steps {
                 script {
-                    // Exécuter le playbook Ansible dans un conteneur Docker
                     sh '''
                     docker run --rm \
                     -v $PWD:/workspace \
@@ -75,7 +78,13 @@ pipeline {
 
         stage('Nettoyage') {
             steps {
-                sh 'docker compose down || echo "Erreur lors du nettoyage des conteneurs !"'
+                script {
+                    sh '''
+                    for container in $(docker ps -a --format "{{.Names}}" | grep -v jenkins-test); do
+                        docker rm -f $container || echo "Échec suppression $container"
+                    done
+                    '''
+                }
             }
         }
     }
