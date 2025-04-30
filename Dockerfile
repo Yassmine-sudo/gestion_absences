@@ -18,9 +18,8 @@ RUN apt-get update
 # Installer Docker Engine et la CLI
 RUN apt-get install -y docker-ce docker-ce-cli containerd.io --no-install-recommends
 
-# Installer Docker Compose via pip
-RUN apt-get update && apt-get install -y python3 python3-pip --no-install-recommends
-RUN pip3 install docker-compose
+# Installer Docker Compose via apt
+RUN apt-get update && apt-get install -y python3-docker-compose --no-install-recommends
 
 # Ajouter l'utilisateur jenkins au groupe docker
 RUN usermod -aG docker jenkins
