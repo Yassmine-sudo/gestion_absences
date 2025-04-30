@@ -26,6 +26,15 @@ pipeline {
             }
         }
 
+        stage('Construire l\'image Docker avec Ansible') {
+            steps {
+                script {
+                    // Construire l'image Docker avec Ansible
+                    sh 'docker build -t my-app-with-ansible .'
+                }
+            }
+        }
+
         stage('Construire les conteneurs') {
             steps {
                 sh 'docker compose down --remove-orphans || true'
@@ -43,11 +52,17 @@ pipeline {
             }
         }
 
+        // Stage d'exécution Ansible
         stage('Déploiement avec Ansible') {
             steps {
                 script {
-                    // Exécute Ansible dans WSL avec le bon chemin
-                    sh 'wsl bash -ic "/usr/bin/ansible-playbook /mnt/c/Users/DELL/gestion_absences/deploiement/playbook.yml"'
+                    // Exécuter le playbook Ansible dans un conteneur Docker
+                    sh '''
+                    docker run --rm \
+                    -v $PWD:/workspace \
+                    -w /workspace/deploiement \
+                    my-app-with-ansible ansible-playbook /workspace/deploiement/playbook.yml
+                    '''
                 }
             }
         }
