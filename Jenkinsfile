@@ -43,6 +43,15 @@ pipeline {
             }
         }
 
+        stage('Déploiement avec Ansible') {
+            steps {
+                script {
+                    // Exécute Ansible dans WSL avec le bon chemin
+                    sh 'wsl bash -ic "/usr/bin/ansible-playbook /mnt/c/Users/DELL/gestion_absences/deploiement/playbook.yml"'
+                }
+            }
+        }
+
         stage('Exécuter les tests (si applicable)') {
             steps {
                 echo 'Pas de tests définis pour le moment.'
