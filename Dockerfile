@@ -11,8 +11,7 @@ RUN apt-get update && apt-get install -y \
     lsb-release \
     apt-transport-https \
     python3-pip \
-    python3-venv \  # Ajoute python3-venv pour gérer des environnements virtuels
-    sshpass \  # Installer sshpass
+    sshpass \   # Assure-toi que sshpass est installé via apt
     git \
     --no-install-recommends
 
