@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "my-app-with-ansible"
+        DEPLOY_DIR = "${env.WORKSPACE}/deploiement"
     }
 
     stages {
@@ -55,16 +56,32 @@ pipeline {
             }
         }
 
+        stage('Vérification de la présence du playbook.yml') {
+            steps {
+                script {
+                    echo "Vérification de la présence du playbook.yml dans le conteneur..."
+
+                    sh """
+                        docker run --rm \
+                            -v "\$(pwd)/deploiement:/ansible" \
+                            -w /ansible \
+                            ${DOCKER_IMAGE} \
+                            /bin/bash -c "ls -al /ansible && test -f /ansible/playbook.yml && echo 'Playbook trouvé' || echo 'Playbook introuvable'"
+                    """
+                }
+            }
+        }
+
         stage('Déploiement avec Ansible') {
             steps {
                 script {
-                    if (fileExists('deploiement/playbook.yml')) {
+                    if (fileExists("${DEPLOY_DIR}/playbook.yml")) {
                         echo "Le playbook.yml existe, on peut lancer Ansible."
                         sh """
                             docker run --rm \
                                 -v "\$(pwd)/deploiement:/ansible" \
                                 -w /ansible \
-                                ${DOCKER_IMAGE} /bin/bash -c "ls -al && ansible-playbook playbook.yml"
+                                ${DOCKER_IMAGE} /bin/bash -c "ansible-playbook playbook.yml"
                         """
                     } else {
                         error("Le fichier playbook.yml est introuvable dans le dossier 'deploiement'")
@@ -73,16 +90,15 @@ pipeline {
             }
         }
 
-        // Section 'Exécuter les tests' supprimée, car tu ne souhaites pas l'avoir maintenant
-        // stage('Exécuter les tests (si applicable)') {
-        //     when {
-        //         expression { fileExists('tests') }
-        //     }
-        //     steps {
-        //         echo "Exécution des tests (à implémenter selon le projet)"
-        //         // sh "pytest" ou autre selon ton projet
-        //     }
-        // }
+        stage('Exécuter les tests (si applicable)') {
+            when {
+                expression { fileExists('tests') }
+            }
+            steps {
+                echo "Exécution des tests (à implémenter selon le projet)"
+                // sh "pytest" ou autre selon ton projet
+            }
+        }
 
         stage('Nettoyage') {
             steps {
