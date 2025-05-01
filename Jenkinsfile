@@ -59,11 +59,16 @@ pipeline {
         stage('Vérification de la présence du playbook.yml') {
             steps {
                 script {
+                    echo "Vérification de la présence du playbook.yml dans le répertoire Jenkins..."
+
+                    // Lister les fichiers dans le répertoire deploy de Jenkins
+                    sh "ls -al ${DEPLOY_DIR}"
+
                     echo "Vérification de la présence du playbook.yml dans le conteneur..."
 
                     sh """
                         docker run --rm \
-                            -v "\$(pwd)/deploiement:/ansible" \
+                            -v "${DEPLOY_DIR}:/ansible" \
                             -w /ansible \
                             ${DOCKER_IMAGE} \
                             /bin/bash -c "ls -al /ansible && test -f /ansible/playbook.yml && echo 'Playbook trouvé' || echo 'Playbook introuvable'"
@@ -79,7 +84,7 @@ pipeline {
                         echo "Le playbook.yml existe, on peut lancer Ansible."
                         sh """
                             docker run --rm \
-                                -v "\$(pwd)/deploiement:/ansible" \
+                                -v "${DEPLOY_DIR}:/ansible" \
                                 -w /ansible \
                                 ${DOCKER_IMAGE} /bin/bash -c "ansible-playbook playbook.yml"
                         """
