@@ -1,8 +1,7 @@
 - name: Déploiement de l'application avec Docker
   hosts: localhost
-  become: yes
+  become: true
   tasks:
-
     - name: Vérifier que Docker fonctionne
       command: docker ps
       register: docker_running
