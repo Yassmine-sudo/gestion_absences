@@ -14,19 +14,18 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     sshpass \
     git \
+    jq \
     ansible \
     --no-install-recommends
 
-# Installation de Docker
-RUN curl -fsSL https://get.docker.com | sh \
-    && apt-get install -y \
-    docker-ce \
-    docker-ce-cli \
-    containerd.io \
-    --no-install-recommends
+# Installer Docker CE (client + daemon)
+RUN curl -fsSL https://get.docker.com | sh
 
-# Installer Docker Compose (version la plus récente)
-RUN curl -L https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose \
+# Installer Docker Compose (version stable et connue)
+ENV DOCKER_COMPOSE_VERSION=1.29.2
+
+RUN curl -L "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" \
+    -o /usr/local/bin/docker-compose \
     && chmod +x /usr/local/bin/docker-compose
 
 # Ajouter l'utilisateur Jenkins au groupe Docker
