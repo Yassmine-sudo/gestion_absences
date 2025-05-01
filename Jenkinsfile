@@ -69,20 +69,20 @@ pipeline {
         stage('Déploiement avec Ansible') {
             steps {
                 script {
-                    def playbookPath = '/var/jenkins_home/workspace/test-compose/deploiement/playbook.yml'
+                    def playbookRelativePath = 'deploiement/playbook.yml'
 
-                    if (fileExists(playbookPath)) {
+                    if (fileExists(playbookRelativePath)) {
                         echo "Le playbook.yml existe, on peut lancer Ansible."
 
-                        // Vérification des fichiers dans le dossier deploiement
-                        sh 'ls -al /var/jenkins_home/workspace/test-compose/deploiement'
+                        // Vérification des fichiers
+                        sh 'ls -al deploiement'
 
                         // Lancer Ansible
                         sh """
                             docker run --rm \
-                                -v /var/jenkins_home/workspace/test-compose:/workspace \
+                                -v "\$(pwd)":/workspace \
                                 -w /workspace/deploiement \
-                                ${DOCKER_IMAGE} ansible-playbook /workspace/deploiement/playbook.yml
+                                ${DOCKER_IMAGE} ansible-playbook playbook.yml
                         """
                     } else {
                         error "Le playbook.yml est introuvable dans le répertoire attendu."
