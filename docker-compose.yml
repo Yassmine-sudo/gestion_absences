@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: my-app-with-ansible    # Image nommée pour réutilisation
+    image: my-app-with-ansible
     container_name: jenkins-test
     restart: always
     ports:
@@ -12,13 +12,13 @@ services:
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./deploiement:/workspace/deploiement
     networks:
       - jenkins_network
-    user: root   # Nécessaire pour gérer Docker et éviter permissions
+    user: root
 
 volumes:
   jenkins_home:
-    driver: local
 
 networks:
   jenkins_network:
