@@ -2,20 +2,13 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'my-app-with-ansible'  // Nom de l'image Docker créée
+        DOCKER_IMAGE = "my-app-with-ansible"
     }
 
     stages {
-        stage('Checkout SCM') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Cloner le dépôt') {
             steps {
                 script {
-                    // Récupérer les derniers changements
                     sh 'git fetch --all'
                     sh 'git reset --hard origin/master'
                 }
@@ -25,7 +18,6 @@ pipeline {
         stage('Vérification Docker') {
             steps {
                 script {
-                    // Vérifier si Docker est installé
                     sh 'which docker'
                     sh 'docker --version'
                     sh 'docker compose version'
@@ -36,8 +28,7 @@ pipeline {
         stage('Construire l\'image Docker avec Ansible') {
             steps {
                 script {
-                    // Construire l'image Docker
-                    sh 'docker build -t ${DOCKER_IMAGE} .'
+                    sh "docker build -t ${DOCKER_IMAGE} ."
                 }
             }
         }
@@ -45,8 +36,7 @@ pipeline {
         stage('Construire les conteneurs') {
             steps {
                 script {
-                    // Construire les conteneurs Docker
-                    sh 'docker compose down --remove-orphans'
+                    sh 'docker compose down --remove-orphans || true'
                     sh 'docker compose build'
                 }
             }
@@ -55,12 +45,11 @@ pipeline {
         stage('Lancer l\'application') {
             steps {
                 script {
-                    // Vérifier si le conteneur existe déjà
                     def containerExists = sh(script: "docker ps -a -q -f name=jenkins-test", returnStdout: true).trim()
                     if (containerExists) {
                         echo "Le conteneur 'jenkins-test' existe déjà, on le laisse tourner."
                     } else {
-                        echo "Le conteneur 'jenkins-test' n'existe pas, on va le créer."
+                        sh "docker compose up -d"
                     }
                 }
             }
@@ -69,54 +58,45 @@ pipeline {
         stage('Déploiement avec Ansible') {
             steps {
                 script {
-                    def playbookRelativePath = 'deploiement/playbook.yml'
-
-                    if (fileExists(playbookRelativePath)) {
+                    if (fileExists('deploiement/playbook.yml')) {
                         echo "Le playbook.yml existe, on peut lancer Ansible."
-
-                        // Vérification des fichiers
-                        sh 'ls -al deploiement'
-
-                        // Lancer Ansible
                         sh """
                             docker run --rm \
-                                -v "\$(pwd)":/workspace \
-                                -w /workspace/deploiement \
-                                ${DOCKER_IMAGE} ansible-playbook playbook.yml
+                                -v "\$(pwd)/deploiement:/ansible" \
+                                -w /ansible \
+                                ${DOCKER_IMAGE} /bin/bash -c "ls -al && ansible-playbook playbook.yml"
                         """
                     } else {
-                        error "Le playbook.yml est introuvable dans le répertoire attendu."
+                        error("Le fichier playbook.yml est introuvable dans le dossier 'deploiement'")
                     }
                 }
             }
         }
 
-        stage('Exécuter les tests (si applicable)') {
-            when {
-                expression { return currentBuild.result == null }
-            }
-            steps {
-                echo "Les tests sont exécutés ici si nécessaire."
-            }
-        }
+        // Section 'Exécuter les tests' supprimée, car tu ne souhaites pas l'avoir maintenant
+        // stage('Exécuter les tests (si applicable)') {
+        //     when {
+        //         expression { fileExists('tests') }
+        //     }
+        //     steps {
+        //         echo "Exécution des tests (à implémenter selon le projet)"
+        //         // sh "pytest" ou autre selon ton projet
+        //     }
+        // }
 
         stage('Nettoyage') {
             steps {
-                echo "Cette étape est réservée au nettoyage."
+                echo "Nettoyage terminé"
             }
         }
+    }
 
-        stage('Declarative: Post Actions') {
-            steps {
-                echo "Pipeline terminé."
-                script {
-                    if (currentBuild.result == 'FAILURE') {
-                        echo "Le pipeline a échoué."
-                    } else {
-                        echo "Le pipeline a réussi."
-                    }
-                }
-            }
+    post {
+        failure {
+            echo 'Le pipeline a échoué.'
+        }
+        success {
+            echo 'Le pipeline a réussi.'
         }
     }
 }
