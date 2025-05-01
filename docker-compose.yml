@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   jenkins:
     build:
@@ -5,14 +7,14 @@ services:
       dockerfile: Dockerfile
     image: my-app-with-ansible
     container_name: jenkins-test
-    restart: always
+    restart: unless-stopped
     ports:
-      - "8088:8080"
-      - "50011:50000"
+      - "8088:8080"    # Port web Jenkins
+      - "50011:50000"  # Port d'agent Jenkins (JNLP)
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./deploiement:/workspace/deploiement
+      - ./deploiement:/workspace/deploiement:rw
     networks:
       - jenkins_network
     user: root
