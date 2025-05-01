@@ -69,12 +69,15 @@ pipeline {
         stage('Déploiement avec Ansible') {
             steps {
                 script {
-                    // Définir le chemin du playbook
                     def playbookPath = '/var/jenkins_home/workspace/test-compose/deploiement/playbook.yml'
 
-                    // Vérifier l'existence du fichier playbook.yml avant d'exécuter Ansible
                     if (fileExists(playbookPath)) {
                         echo "Le playbook.yml existe, on peut lancer Ansible."
+
+                        // Vérification des fichiers dans le dossier deploiement
+                        sh 'ls -al /var/jenkins_home/workspace/test-compose/deploiement'
+
+                        // Lancer Ansible
                         sh """
                             docker run --rm \
                                 -v /var/jenkins_home/workspace/test-compose:/workspace \
