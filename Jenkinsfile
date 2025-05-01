@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Cloner le dépôt') {
             steps {
-                checkout scm   // Récupération depuis GitHub via la configuration Jenkins
+                checkout scm
                 script {
                     sh 'git fetch --all'
                     sh 'git reset --hard origin/master'
@@ -19,9 +19,10 @@ pipeline {
         stage('Vérification Docker') {
             steps {
                 script {
-                    sh 'command -v docker || { echo "Docker introuvable"; exit 1; }'
+                    echo "Vérification Docker et Docker Compose"
                     sh 'docker --version'
-                    sh 'docker compose version || docker-compose --version'
+                    sh 'docker-compose --version'
+                    sh 'docker ps'
                 }
             }
         }
@@ -37,8 +38,8 @@ pipeline {
         stage('Construire les conteneurs') {
             steps {
                 script {
-                    sh 'docker compose down --remove-orphans || true'
-                    sh 'docker compose build'
+                    sh 'docker-compose down --remove-orphans || true'
+                    sh 'docker-compose build'
                 }
             }
         }
@@ -48,11 +49,11 @@ pipeline {
                 script {
                     def containerExists = sh(script: "docker ps -a -q -f name=jenkins-test", returnStdout: true).trim()
                     if (containerExists) {
-                        echo "Le conteneur 'jenkins-test' existe déjà, on le laisse tourner."
+                        echo "Le conteneur 'jenkins-test' existe déjà."
                         sh 'docker start jenkins-test || true'
                     } else {
                         echo "Le conteneur 'jenkins-test' n'existe pas encore. Lancement via docker-compose."
-                        sh 'docker compose up -d'
+                        sh 'docker-compose up -d'
                     }
                 }
             }
@@ -61,7 +62,6 @@ pipeline {
         stage('Vérification de la présence du playbook.yml') {
             steps {
                 script {
-                    // Récupérer le chemin absolu du workspace actuel
                     def ws = sh(script: 'pwd', returnStdout: true).trim()
                     echo "Workspace: ${ws}"
 
@@ -98,14 +98,13 @@ pipeline {
 
         stage('Exécuter les tests (si applicable)') {
             steps {
-                echo "Tests non définis pour l’instant."
+                echo "Tests non définis pour l'instant."
             }
         }
 
         stage('Nettoyage') {
             steps {
                 echo "Nettoyage des ressources si nécessaire..."
-                // Vous pouvez ajouter ici des commandes de nettoyage, par exemple : docker system prune -f
             }
         }
     }
