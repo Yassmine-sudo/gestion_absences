@@ -2,7 +2,7 @@ FROM jenkins/jenkins:lts
 
 USER root
 
-# Installer les dépendances de base
+# Installer les dépendances
 RUN apt-get update && apt-get install -y \
     curl \
     sudo \
@@ -15,17 +15,18 @@ RUN apt-get update && apt-get install -y \
     git \
     --no-install-recommends
 
-# Ajouter la clé GPG officielle de Docker
+# Ajouter la clé GPG officielle Docker
 RUN install -m 0755 -d /etc/apt/keyrings && \
     curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
     chmod a+r /etc/apt/keyrings/docker.gpg
 
-# Ajouter le dépôt Docker compatible avec Debian
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
-    $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list && \
-    apt-get update
+# Ajouter le dépôt Docker
+RUN echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/debian $(lsb_release -cs) stable" \
+  > /etc/apt/sources.list.d/docker.list && apt-get update
 
-# Installer Docker CLI et plugins
+# Installer Docker CLI + Compose Plugin
 RUN apt-get install -y \
     docker-ce \
     docker-ce-cli \
@@ -33,16 +34,16 @@ RUN apt-get install -y \
     docker-buildx-plugin \
     docker-compose-plugin
 
-# Installer Ansible via apt (version stable, adaptée aux environnements Docker)
+# Installer Ansible
 RUN apt-get install -y ansible
 
-# Installer la collection Docker pour Ansible
+# Installer la collection Docker Ansible
 RUN ansible-galaxy collection install community.docker
 
-# Ajouter l'utilisateur Jenkins au groupe Docker
-RUN groupadd -f docker && usermod -aG docker jenkins
-
-# Nettoyer pour réduire la taille de l'image
+# Nettoyage
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Ajouter Jenkins au groupe Docker (efficace uniquement si le conteneur est relancé avec le bon volume et groupe)
+RUN groupadd -f docker && usermod -aG docker jenkins
 
 USER jenkins
