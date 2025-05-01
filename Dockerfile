@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     apt-transport-https \
     python3-pip \
     python3-venv \  # Ajouter python3-venv pour gérer les environnements virtuels si nécessaire
-    sshpass \
+    sshpass \  # Installation de sshpass
     git \
     --no-install-recommends
 
