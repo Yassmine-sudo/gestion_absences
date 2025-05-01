@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     lsb-release \
     apt-transport-https \
     python3-pip \
-    sshpass \   # Assure-toi que sshpass est installé via apt
+    sshpass \
     git \
     --no-install-recommends
 
