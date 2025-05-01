@@ -11,27 +11,39 @@ RUN apt-get update && apt-get install -y \
     lsb-release \
     apt-transport-https \
     python3-pip \
+    python3-venv \  # Ajouter python3-venv pour gérer les environnements virtuels si nécessaire
     sshpass \
     git \
     --no-install-recommends
 
-# Installer Docker CLI et plugins
+# Ajouter la clé GPG officielle de Docker
 RUN install -m 0755 -d /etc/apt/keyrings && \
     curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
-    chmod a+r /etc/apt/keyrings/docker.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+    chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Ajouter le dépôt Docker compatible avec Debian
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
     $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list && \
-    apt-get update && \
-    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    apt-get update
 
-# Installer Ansible et la collection Docker
-RUN pip3 install --no-cache-dir ansible && \
-    ansible-galaxy collection install community.docker
+# Installer Docker CLI et plugins
+RUN apt-get install -y \
+    docker-ce \
+    docker-ce-cli \
+    containerd.io \
+    docker-buildx-plugin \
+    docker-compose-plugin
 
-# Ajouter Jenkins au groupe Docker
+# Installer Ansible via apt (version stable, adaptée aux environnements Docker)
+RUN apt-get install -y ansible
+
+# Installer la collection Docker pour Ansible
+RUN ansible-galaxy collection install community.docker
+
+# Ajouter l'utilisateur Jenkins au groupe Docker
 RUN groupadd -f docker && usermod -aG docker jenkins
 
-# Nettoyage
+# Nettoyer pour réduire la taille de l'image
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 USER jenkins
