@@ -2,13 +2,14 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_BUILDKIT = '1'
+        DOCKER_IMAGE = 'my-app-with-ansible'
+        WORKDIR = 'deploiement'
     }
 
     stages {
         stage('Cloner le dépôt') {
             steps {
-                checkout scm // <-- récupère depuis GitHub automatiquement
+                checkout scm
                 script {
                     sh 'git fetch --all'
                     sh 'git reset --hard origin/master'
@@ -19,9 +20,9 @@ pipeline {
         stage('Vérification Docker') {
             steps {
                 script {
-                    sh 'command -v docker || { echo "Docker introuvable"; exit 1; }'
+                    sh 'command -v docker'
                     sh 'docker --version'
-                    sh 'docker compose version || docker-compose --version'
+                    sh 'docker compose version'
                 }
             }
         }
@@ -29,7 +30,7 @@ pipeline {
         stage('Construire l\'image Docker avec Ansible') {
             steps {
                 script {
-                    sh 'docker build -t my-app-with-ansible .'
+                    sh "docker build -t ${DOCKER_IMAGE} ."
                 }
             }
         }
@@ -37,7 +38,7 @@ pipeline {
         stage('Construire les conteneurs') {
             steps {
                 script {
-                    sh 'docker compose down --remove-orphans || true'
+                    sh 'docker compose down --remove-orphans'
                     sh 'docker compose build'
                 }
             }
@@ -46,15 +47,11 @@ pipeline {
         stage('Lancer l\'application') {
             steps {
                 script {
-                    def containerExists = sh(
-                        script: "docker ps -a -q -f name=jenkins-test",
-                        returnStdout: true
-                    ).trim()
+                    def containerExists = sh(script: "docker ps -a -q -f name=jenkins-test", returnStdout: true).trim()
                     if (containerExists) {
                         echo "Le conteneur 'jenkins-test' existe déjà, on le laisse tourner."
-                        sh 'docker start jenkins-test || true'
+                        sh 'docker start jenkins-test'
                     } else {
-                        echo "Le conteneur 'jenkins-test' n'existe pas encore. Lancement via docker-compose."
                         sh 'docker compose up -d'
                     }
                 }
@@ -64,15 +61,16 @@ pipeline {
         stage('Vérification de la présence du playbook.yml') {
             steps {
                 script {
-                    echo "Vérification de la présence du playbook.yml dans le répertoire Jenkins..."
-                    sh "ls -al \"$WORKSPACE/deploiement\""
+                    echo 'Vérification de la présence du playbook.yml dans le répertoire Jenkins...'
+                    sh "ls -al ${WORKDIR}"
+                    sh "cat ${WORKDIR}/playbook.yml"
 
-                    echo "Vérification dans le conteneur Ansible..."
+                    echo 'Vérification dans le conteneur Ansible...'
                     sh """
                         docker run --rm \
-                            -v "$WORKSPACE/deploiement:/ansible" \
+                            -v "\$(pwd)/${WORKDIR}:/ansible" \
                             -w /ansible \
-                            my-app-with-ansible \
+                            ${DOCKER_IMAGE} \
                             /bin/bash -c 'ls -al /ansible && test -f /ansible/playbook.yml && echo Playbook trouvé || { echo Playbook introuvable; exit 1; }'
                     """
                 }
@@ -80,14 +78,18 @@ pipeline {
         }
 
         stage('Déploiement avec Ansible') {
+            when {
+                expression {
+                    fileExists("${WORKDIR}/playbook.yml")
+                }
+            }
             steps {
                 script {
-                    echo "Lancement du playbook Ansible"
                     sh """
                         docker run --rm \
-                            -v "$WORKSPACE/deploiement:/ansible" \
+                            -v "\$(pwd)/${WORKDIR}:/ansible" \
                             -w /ansible \
-                            my-app-with-ansible \
+                            ${DOCKER_IMAGE} \
                             ansible-playbook playbook.yml
                     """
                 }
@@ -96,14 +98,13 @@ pipeline {
 
         stage('Exécuter les tests (si applicable)') {
             steps {
-                echo "Tests non définis pour l’instant."
+                echo 'Aucun test défini pour l’instant.'
             }
         }
 
         stage('Nettoyage') {
             steps {
-                echo "Nettoyage des ressources si nécessaire..."
-                // Exemple si besoin : sh 'docker system prune -f'
+                echo 'Nettoyage terminé (pas encore implémenté).'
             }
         }
     }
@@ -113,7 +114,7 @@ pipeline {
             echo '❌ Le pipeline a échoué.'
         }
         success {
-            echo '✅ Le pipeline a réussi.'
+            echo '✅ Pipeline terminé avec succès.'
         }
     }
 }
