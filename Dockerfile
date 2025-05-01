@@ -1,42 +1,50 @@
-# Utiliser l'image officielle Jenkins LTS comme base
 FROM jenkins/jenkins:lts
 
 USER root
 
-# Mise à jour et installation des outils de base
+# Installer les dépendances de base
 RUN apt-get update && apt-get install -y \
     curl \
     sudo \
-    gnupg \
-    ca-certificates \
-    lsb-release \
-    apt-transport-https \
-    python3-pip \
-    sshpass \
     git \
-    jq \
-    ansible \
+    sshpass \
+    python3-full \
+    python3-venv \
+    gnupg \
+    lsb-release \
+    ca-certificates \
+    apt-transport-https \
+    software-properties-common \
     --no-install-recommends
 
-# Installer Docker CE (client + daemon)
-RUN curl -fsSL https://get.docker.com | sh
+# Créer un environnement virtuel Python pour Ansible
+RUN python3 -m venv /opt/ansible-venv && \
+    /opt/ansible-venv/bin/pip install --upgrade pip && \
+    /opt/ansible-venv/bin/pip install ansible
 
-# Installer Docker Compose (version stable et connue)
-ENV DOCKER_COMPOSE_VERSION=1.29.2
+# Ajouter le venv au PATH pour qu'Ansible soit utilisable globalement
+ENV PATH="/opt/ansible-venv/bin:$PATH"
 
-# Remplace ta commande actuelle par celle-ci
-RUN curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" \
-    -o /usr/local/bin/docker-compose \
- && chmod +x /usr/local/bin/docker-compose \
- && ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+# Ajouter la clé Docker et le dépôt Docker pour Debian
+RUN install -m 0755 -d /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    chmod a+r /etc/apt/keyrings/docker.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+    $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list && \
+    apt-get update && \
+    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
+# Installer Docker Compose manuellement (optionnel)
+RUN curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 \
+    -o /usr/local/bin/docker-compose && \
+    chmod +x /usr/local/bin/docker-compose && \
+    ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
-# Ajouter l'utilisateur Jenkins au groupe Docker
+# Ajouter Jenkins au groupe docker
 RUN groupadd -f docker && usermod -aG docker jenkins
 
-# Exposer les ports Jenkins
-EXPOSE 8080
-EXPOSE 50000
+# Nettoyage
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Démarrer Jenkins
-ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/jenkins.sh"]
+# Revenir à l'utilisateur Jenkins
+USER jenkins
