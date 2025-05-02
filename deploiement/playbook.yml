@@ -23,6 +23,7 @@
         project_src: /workspace/..  # Le chemin vers le fichier docker-compose.yml à la racine
         state: present  # Utilisation de "state: present" pour démarrer les services
         remove_orphans: true
+        pull: yes  # Ajoute ce paramètre pour s'assurer que les images sont récupérées avant de démarrer les conteneurs
 
     - name: Vérifier que le service Jenkins est bien démarré
       command: docker ps --filter "name=jenkins-test" --filter "status=running" --format "{{.Names}}"
