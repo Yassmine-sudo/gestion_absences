@@ -19,10 +19,10 @@
       changed_when: false
 
     - name: Vérifier si le conteneur Jenkins est déjà en cours d'exécution
-      shell: docker ps --filter "name=jenkins-test" --filter "status=running" --format "{{.Names}}"
+      command: docker ps --filter "name=jenkins-test" --filter "status=running" --format "{{.Names}}"
       register: jenkins_container
-      failed_when: false  # ne fait pas échouer la tâche
-      changed_when: false  # ne marque pas la tâche comme modifiée
+      failed_when: false
+      changed_when: false
       ignore_errors: true
 
     - name: Lancer les services avec docker-compose si le conteneur Jenkins n'existe pas
@@ -30,7 +30,7 @@
         project_src: /workspace/deploiement  # Le chemin vers le fichier docker-compose.yml
         state: present
         remove_orphans: true
-      when: "'jenkins-test' not in jenkins_container.stdout"
+      when: jenkins_container.stdout == ""
 
     - name: Vérifier que le service Jenkins est bien démarré
       command: docker ps --filter "name=jenkins-test" --filter "status=running" --format "{{.Names}}"
