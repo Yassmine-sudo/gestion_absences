@@ -15,7 +15,7 @@ services:
       - ./deploiement:/workspace/deploiement:rw
     networks:
       - jenkins_network
-    user: root
+    user: root  # Important pour autoriser l'accès au Docker socket
 
 volumes:
   jenkins_home:
