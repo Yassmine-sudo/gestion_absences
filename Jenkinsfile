@@ -10,6 +10,7 @@ pipeline {
             steps {
                 checkout scm
                 script {
+                    echo "Reset du dépôt sur origin/master"
                     sh 'git fetch --all'
                     sh 'git reset --hard origin/master'
                 }
@@ -19,9 +20,9 @@ pipeline {
         stage('Vérification Docker') {
             steps {
                 script {
-                    echo "Vérification Docker et Docker Compose"
-                    sh 'docker --version'
-                    sh 'docker-compose --version'
+                    echo "✅ Vérification Docker et Docker Compose"
+                    sh 'docker --version || { echo "Docker non installé"; exit 1; }'
+                    sh 'docker-compose --version || { echo "Docker Compose non installé"; exit 1; }'
                     sh 'docker ps'
                 }
             }
@@ -30,6 +31,7 @@ pipeline {
         stage('Construire l\'image Docker avec Ansible') {
             steps {
                 script {
+                    echo "🔨 Build de l'image ${DOCKER_IMAGE}"
                     sh "docker build -t ${DOCKER_IMAGE} ."
                 }
             }
@@ -38,6 +40,7 @@ pipeline {
         stage('Construire les conteneurs') {
             steps {
                 script {
+                    echo "⚙️ Construction des conteneurs via docker-compose"
                     sh 'docker-compose down --remove-orphans || true'
                     sh 'docker-compose build'
                 }
@@ -49,10 +52,10 @@ pipeline {
                 script {
                     def containerExists = sh(script: "docker ps -a -q -f name=jenkins-test", returnStdout: true).trim()
                     if (containerExists) {
-                        echo "Le conteneur 'jenkins-test' existe déjà."
+                        echo "🔁 Le conteneur 'jenkins-test' existe déjà. Redémarrage..."
                         sh 'docker start jenkins-test || true'
                     } else {
-                        echo "Le conteneur 'jenkins-test' n'existe pas encore. Lancement via docker-compose."
+                        echo "🚀 Lancement de l'application avec docker-compose"
                         sh 'docker-compose up -d'
                     }
                 }
@@ -63,18 +66,14 @@ pipeline {
             steps {
                 script {
                     def ws = sh(script: 'pwd', returnStdout: true).trim()
-                    echo "Workspace: ${ws}"
+                    echo "🔎 Vérification du playbook dans ${ws}/deploiement"
 
-                    echo "Contenu du répertoire 'deploiement' (sur Jenkins) :"
-                    sh "ls -al ${ws}/deploiement"
-
-                    echo "Vérification dans le conteneur Ansible..."
                     sh """
                         docker run --rm \\
                             -v "${ws}/deploiement:/ansible" \\
                             -w /ansible \\
                             ${DOCKER_IMAGE} \\
-                            /bin/bash -c 'ls -al && test -f playbook.yml && echo "Playbook trouvé" || { echo "Playbook introuvable"; exit 1; }'
+                            /bin/bash -c 'ls -al && test -f playbook.yml && echo "✅ Playbook trouvé" || { echo "❌ Playbook introuvable"; exit 1; }'
                     """
                 }
             }
@@ -84,7 +83,7 @@ pipeline {
             steps {
                 script {
                     def ws = sh(script: 'pwd', returnStdout: true).trim()
-                    echo "Déploiement avec Ansible, workspace: ${ws}"
+                    echo "📦 Déploiement du playbook depuis ${ws}/deploiement"
                     sh """
                         docker run --rm \\
                             -v "${ws}/deploiement:/ansible" \\
@@ -98,13 +97,13 @@ pipeline {
 
         stage('Exécuter les tests (si applicable)') {
             steps {
-                echo "Tests non définis pour l'instant."
+                echo "🧪 Aucun test défini pour le moment."
             }
         }
 
         stage('Nettoyage') {
             steps {
-                echo "Nettoyage des ressources si nécessaire..."
+                echo "🧹 Nettoyage éventuel des ressources..."
             }
         }
     }
