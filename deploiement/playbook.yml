@@ -31,7 +31,7 @@
 
     - name: Lancer les services avec docker-compose si le conteneur Jenkins n'existe pas
       community.docker.docker_compose_v2:
-        project_src: /workspace/deploiement  # Le chemin vers le fichier docker-compose.yml
+        project_src: .  # Utilise le dossier actuel
         state: present
         remove_orphans: true
       when: "'jenkins-test' not in jenkins_container.stdout"
