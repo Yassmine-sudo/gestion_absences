@@ -68,7 +68,6 @@ pipeline {
                 script {
                     echo "🔎 Vérification de la présence de playbook.yml dans ${DEPLOY_DIR}"
 
-                    // Ajout de débogage pour vérifier l'état du répertoire de déploiement
                     sh """
                         docker run --rm \\
                             -v "${DEPLOY_DIR}:/workspace/deploiement:rw" \\
@@ -85,13 +84,12 @@ pipeline {
                 script {
                     echo "📦 Déploiement du playbook depuis ${DEPLOY_DIR}"
 
-                    // Exécution de l'ansible playbook avec volume monté
                     sh """
                         docker run --rm \\
                             -v "${DEPLOY_DIR}:/workspace/deploiement:rw" \\
                             -w /workspace/deploiement \\
                             ${DOCKER_IMAGE} \\
-                            ansible-playbook playbook.yml
+                            /opt/ansible-venv/bin/ansible-playbook playbook.yml
                     """
                 }
             }
