@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "my-app-with-ansible"
+        DEPOLOY_DIR = "${WORKSPACE}/deploiement"  // Répertoire local pour le déploiement
     }
 
     stages {
@@ -65,16 +66,15 @@ pipeline {
         stage('Vérification de la présence du playbook.yml') {
             steps {
                 script {
-                    def ws = sh(script: 'pwd', returnStdout: true).trim()
-                    echo "🔎 Vérification du playbook dans ${ws}/deploiement"
+                    echo "🔎 Vérification de la présence de playbook.yml dans ${DEPOLOY_DIR}"
 
                     // Ajout de débogage pour vérifier l'état du répertoire de déploiement
                     sh """
                         docker run --rm \\
-                            -v "${ws}/deploiement:/ansible" \\
+                            -v "${DEPOLOY_DIR}:/ansible" \\
                             -w /ansible \\
                             ${DOCKER_IMAGE} \\
-                            /bin/bash -c 'echo "Workspace: ${ws}" && env && ls -al /ansible && test -f playbook.yml && echo "✅ Playbook trouvé" || { echo "❌ Playbook introuvable"; exit 1; }'
+                            /bin/bash -c 'echo "Workspace: ${DEPOLOY_DIR}" && env && ls -al /ansible && test -f playbook.yml && echo "✅ Playbook trouvé" || { echo "❌ Playbook introuvable"; exit 1; }'
                     """
                 }
             }
@@ -83,11 +83,12 @@ pipeline {
         stage('Déploiement avec Ansible') {
             steps {
                 script {
-                    def ws = sh(script: 'pwd', returnStdout: true).trim()
-                    echo "📦 Déploiement du playbook depuis ${ws}/deploiement"
+                    echo "📦 Déploiement du playbook depuis ${DEPOLOY_DIR}"
+
+                    // Exécution de l'ansible playbook avec volume monté
                     sh """
                         docker run --rm \\
-                            -v "${ws}/deploiement:/ansible" \\
+                            -v "${DEPOLOY_DIR}:/ansible" \\
                             -w /ansible \\
                             ${DOCKER_IMAGE} \\
                             ansible-playbook playbook.yml
