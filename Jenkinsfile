@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "my-app-with-ansible"
-        DEPOLOY_DIR = "${WORKSPACE}/deploiement" // Répertoire local pour le déploiement
+        DEPLOY_DIR = "${WORKSPACE}/deploiement"  // Répertoire local pour le déploiement
     }
 
     stages {
@@ -51,16 +51,13 @@ pipeline {
         stage('Lancer l\'application') {
             steps {
                 script {
-                    // Vérifier si le conteneur existe
                     def containerExists = sh(script: "docker ps -a -q -f name=jenkins-test", returnStdout: true).trim()
-
                     if (containerExists) {
-                        echo "✅ Le conteneur 'jenkins-test' existe. Redémarrage du conteneur..."
-                        // Redémarrage du conteneur si déjà existant
-                        sh 'docker restart jenkins-test'
+                        echo "🔁 Le conteneur 'jenkins-test' existe déjà. Redémarrage..."
+                        sh 'docker start jenkins-test || true'
                     } else {
                         echo "🚀 Lancement de l'application avec docker-compose"
-                        sh 'docker-compose up -d'  // Lancer les conteneurs définis dans docker-compose.yml
+                        sh 'docker-compose up -d'
                     }
                 }
             }
@@ -69,15 +66,15 @@ pipeline {
         stage('Vérification de la présence du playbook.yml') {
             steps {
                 script {
-                    echo "🔎 Vérification de la présence de playbook.yml dans ${DEPOLOY_DIR}"
+                    echo "🔎 Vérification de la présence de playbook.yml dans ${DEPLOY_DIR}"
 
                     // Ajout de débogage pour vérifier l'état du répertoire de déploiement
                     sh """
                         docker run --rm \\
-                            -v "${DEPOLOY_DIR}:/ansible" \\
-                            -w /ansible \\
+                            -v "${DEPLOY_DIR}:/workspace/deploiement:rw" \\
+                            -w /workspace/deploiement \\
                             ${DOCKER_IMAGE} \\
-                            /bin/bash -c 'echo "Workspace: ${DEPOLOY_DIR}" && env && ls -al /ansible && test -f playbook.yml && echo "✅ Playbook trouvé" || { echo "❌ Playbook introuvable"; exit 1; }'
+                            /bin/bash -c 'echo "Workspace: ${DEPLOY_DIR}" && env && ls -al /workspace/deploiement && test -f playbook.yml && echo "✅ Playbook trouvé" || { echo "❌ Playbook introuvable"; exit 1; }'
                     """
                 }
             }
@@ -86,13 +83,13 @@ pipeline {
         stage('Déploiement avec Ansible') {
             steps {
                 script {
-                    echo "📦 Déploiement du playbook depuis ${DEPOLOY_DIR}"
+                    echo "📦 Déploiement du playbook depuis ${DEPLOY_DIR}"
 
                     // Exécution de l'ansible playbook avec volume monté
                     sh """
                         docker run --rm \\
-                            -v "${DEPOLOY_DIR}:/ansible" \\
-                            -w /ansible \\
+                            -v "${DEPLOY_DIR}:/workspace/deploiement:rw" \\
+                            -w /workspace/deploiement \\
                             ${DOCKER_IMAGE} \\
                             ansible-playbook playbook.yml
                     """
