@@ -68,12 +68,13 @@ pipeline {
                     def ws = sh(script: 'pwd', returnStdout: true).trim()
                     echo "🔎 Vérification du playbook dans ${ws}/deploiement"
 
+                    // Ajout de débogage pour vérifier l'état du répertoire de déploiement
                     sh """
                         docker run --rm \\
                             -v "${ws}/deploiement:/ansible" \\
                             -w /ansible \\
                             ${DOCKER_IMAGE} \\
-                            /bin/bash -c 'ls -al && test -f playbook.yml && echo "✅ Playbook trouvé" || { echo "❌ Playbook introuvable"; exit 1; }'
+                            /bin/bash -c 'echo "Workspace: ${ws}" && env && ls -al /ansible && test -f playbook.yml && echo "✅ Playbook trouvé" || { echo "❌ Playbook introuvable"; exit 1; }'
                     """
                 }
             }
