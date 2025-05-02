@@ -1,3 +1,4 @@
+---
 - name: Déploiement de l'application avec Docker
   hosts: localhost
   become: true
@@ -11,9 +12,15 @@
       failed_when: docker_running.rc != 0
       changed_when: false
 
+    - name: Vérifier que Docker Compose v2 est installé
+      command: docker-compose --version
+      register: docker_compose_version
+      failed_when: docker_compose_version.rc != 0
+      changed_when: false
+
     - name: Lancer les services avec docker-compose
-      docker_compose:
-        project_src: /workspace/deploiement
+      community.docker.docker_compose_v2:
+        project_src: /workspace/deploiement/..  # Le chemin vers le fichier docker-compose.yml à la racine
         restarted: true
         remove_orphans: true
 
