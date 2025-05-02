@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "my-app-with-ansible"
-        DEPOLOY_DIR = "${WORKSPACE}/deploiement"  // Répertoire local pour le déploiement
+        DEPOLOY_DIR = "${WORKSPACE}/deploiement" // Répertoire local pour le déploiement
     }
 
     stages {
@@ -51,14 +51,8 @@ pipeline {
         stage('Lancer l\'application') {
             steps {
                 script {
-                    def containerExists = sh(script: "docker ps -a -q -f name=jenkins-test", returnStdout: true).trim()
-                    if (containerExists) {
-                        echo "🔁 Le conteneur 'jenkins-test' existe déjà. Redémarrage..."
-                        sh 'docker start jenkins-test || true'
-                    } else {
-                        echo "🚀 Lancement de l'application avec docker-compose"
-                        sh 'docker-compose up -d'
-                    }
+                    echo "🚀 Lancement de l'application avec docker-compose"
+                    sh 'docker-compose up -d'  // Lancer les conteneurs définis dans docker-compose.yml
                 }
             }
         }
