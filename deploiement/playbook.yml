@@ -19,7 +19,7 @@
       changed_when: false
 
     - name: Vérifier si le conteneur Jenkins est déjà en cours d'exécution
-      command: docker ps --filter "name=jenkins-test" --filter "status=running" --format "{{.Names}}"
+      shell: docker ps --filter "name=jenkins-test" --filter "status=running" --format "{{.Names}}"
       register: jenkins_container
       failed_when: false  # ne fait pas échouer la tâche
       changed_when: false  # ne marque pas la tâche comme modifiée
@@ -34,8 +34,8 @@
 
     - name: Vérifier que le service Jenkins est bien démarré
       command: docker ps --filter "name=jenkins-test" --filter "status=running" --format "{{.Names}}"
-      register: jenkins_container
-      failed_when: "'jenkins-test' not in jenkins_container.stdout"
+      register: jenkins_container_check
+      failed_when: "'jenkins-test' not in jenkins_container_check.stdout"
       changed_when: false
 
     - name: ✅ Déploiement terminé avec succès
