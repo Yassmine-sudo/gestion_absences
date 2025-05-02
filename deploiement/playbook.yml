@@ -19,7 +19,7 @@
       changed_when: false
 
     - name: Vérifier si le conteneur Jenkins est déjà en cours d'exécution
-      command: docker ps --filter "name=jenkins-test" --filter "status=running" --format "{{.Names}}"
+      command: docker ps -a --filter "name=jenkins-test"
       register: jenkins_container
       failed_when: false
       changed_when: false
