@@ -25,6 +25,10 @@
       changed_when: false
       ignore_errors: true
 
+    - name: Afficher la sortie de docker ps
+      debug:
+        var: jenkins_container
+
     - name: Lancer les services avec docker-compose si le conteneur Jenkins n'existe pas
       community.docker.docker_compose_v2:
         project_src: /workspace/deploiement  # Le chemin vers le fichier docker-compose.yml
