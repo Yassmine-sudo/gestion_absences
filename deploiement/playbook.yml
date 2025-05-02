@@ -1,18 +1,28 @@
 - name: Déploiement de l'application avec Docker
   hosts: localhost
   become: true
+  collections:
+    - community.docker
+
   tasks:
-    - name: Vérifier que Docker fonctionne
+    - name: Vérifier que Docker est installé et fonctionne
       command: docker ps
       register: docker_running
       failed_when: docker_running.rc != 0
+      changed_when: false
 
-    - name: Lancer le docker-compose
-      community.docker.docker_compose:
+    - name: Lancer les services avec docker-compose
+      docker_compose:
         project_src: /workspace/deploiement
         restarted: true
         remove_orphans: true
 
-    - name: Afficher un message
+    - name: Vérifier que le service Jenkins est bien démarré
+      command: docker ps --filter "name=jenkins-test" --filter "status=running" --format "{{.Names}}"
+      register: jenkins_container
+      failed_when: "'jenkins-test' not in jenkins_container.stdout"
+      changed_when: false
+
+    - name: ✅ Déploiement terminé avec succès
       debug:
-        msg: "✅ Déploiement terminé avec succès !"
+        msg: "L'application a été déployée et Jenkins est en cours d'exécution."
