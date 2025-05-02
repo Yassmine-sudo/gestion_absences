@@ -51,8 +51,17 @@ pipeline {
         stage('Lancer l\'application') {
             steps {
                 script {
-                    echo "🚀 Lancement de l'application avec docker-compose"
-                    sh 'docker-compose up -d'  // Lancer les conteneurs définis dans docker-compose.yml
+                    // Vérifier si le conteneur existe
+                    def containerExists = sh(script: "docker ps -a -q -f name=jenkins-test", returnStdout: true).trim()
+
+                    if (containerExists) {
+                        echo "✅ Le conteneur 'jenkins-test' existe. Redémarrage du conteneur..."
+                        // Redémarrage du conteneur si déjà existant
+                        sh 'docker restart jenkins-test'
+                    } else {
+                        echo "🚀 Lancement de l'application avec docker-compose"
+                        sh 'docker-compose up -d'  // Lancer les conteneurs définis dans docker-compose.yml
+                    }
                 }
             }
         }
