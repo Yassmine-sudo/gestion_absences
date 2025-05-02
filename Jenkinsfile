@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "my-app-with-ansible"
-        DEPLOY_DIR = "${WORKSPACE}/deploiement"  // Répertoire local pour le déploiement
+        DEPLOY_DIR = "${WORKSPACE}/deploiement"
     }
 
     stages {
@@ -11,7 +11,7 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    echo "Reset du dépôt sur origin/master"
+                    echo "🔄 Reset du dépôt sur origin/master"
                     sh 'git fetch --all'
                     sh 'git reset --hard origin/master'
                 }
@@ -21,7 +21,7 @@ pipeline {
         stage('Vérification Docker') {
             steps {
                 script {
-                    echo "✅ Vérification Docker et Docker Compose"
+                    echo "🐳 Vérification de Docker et Docker Compose"
                     sh 'docker --version || { echo "Docker non installé"; exit 1; }'
                     sh 'docker-compose --version || { echo "Docker Compose non installé"; exit 1; }'
                     sh 'docker ps'
@@ -41,7 +41,7 @@ pipeline {
         stage('Construire les conteneurs') {
             steps {
                 script {
-                    echo "⚙️ Construction des conteneurs via docker-compose"
+                    echo "⚙️ Construction via docker-compose"
                     sh 'docker-compose down --remove-orphans || true'
                     sh 'docker-compose build'
                 }
@@ -53,27 +53,35 @@ pipeline {
                 script {
                     def containerExists = sh(script: "docker ps -a -q -f name=jenkins-test", returnStdout: true).trim()
                     if (containerExists) {
-                        echo "🔁 Le conteneur 'jenkins-test' existe déjà. Redémarrage..."
+                        echo "🔁 Redémarrage du conteneur existant"
                         sh 'docker start jenkins-test || true'
                     } else {
-                        echo "🚀 Lancement de l'application avec docker-compose"
+                        echo "🚀 Lancement via docker-compose"
                         sh 'docker-compose up -d'
                     }
                 }
             }
         }
 
-        stage('Vérification de la présence du playbook.yml') {
+        stage('Vérification de la présence de playbook.yml') {
             steps {
                 script {
-                    echo "🔎 Vérification de la présence de playbook.yml dans ${DEPLOY_DIR}"
+                    echo "🔍 Vérification de playbook.yml dans ${DEPLOY_DIR}"
 
                     sh """
                         docker run --rm \\
                             -v "${DEPLOY_DIR}:/workspace/deploiement:rw" \\
                             -w /workspace/deploiement \\
                             ${DOCKER_IMAGE} \\
-                            /bin/bash -c 'echo "Workspace: ${DEPLOY_DIR}" && env && ls -al /workspace/deploiement && test -f playbook.yml && echo "✅ Playbook trouvé" || { echo "❌ Playbook introuvable"; exit 1; }'
+                            /bin/bash -c '
+                                echo "📁 Contenu du dossier déploiement :"
+                                ls -al
+                                if [ -f playbook.yml ]; then
+                                    echo "✅ Playbook trouvé"
+                                else
+                                    echo "❌ playbook.yml manquant"; exit 1
+                                fi
+                            '
                     """
                 }
             }
@@ -82,14 +90,16 @@ pipeline {
         stage('Déploiement avec Ansible') {
             steps {
                 script {
-                    echo "📦 Déploiement du playbook depuis ${DEPLOY_DIR}"
+                    echo "📦 Exécution du playbook"
 
                     sh """
                         docker run --rm \\
                             -v "${DEPLOY_DIR}:/workspace/deploiement:rw" \\
+                            -v "$HOME/.ssh:/root/.ssh:ro" \\
+                            -e ANSIBLE_HOST_KEY_CHECKING=False \\
                             -w /workspace/deploiement \\
                             ${DOCKER_IMAGE} \\
-                            /opt/ansible-venv/bin/ansible-playbook playbook.yml
+                            ansible-playbook playbook.yml
                     """
                 }
             }
