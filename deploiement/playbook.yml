@@ -18,12 +18,19 @@
       failed_when: docker_compose_version.rc != 0
       changed_when: false
 
-    - name: Lancer les services avec docker-compose
+    - name: Vérifier si le conteneur Jenkins est déjà en cours d'exécution
+      command: docker ps --filter "name=jenkins-test" --filter "status=running" --format "{{.Names}}"
+      register: jenkins_container
+      failed_when: false  # ne fait pas échouer la tâche
+      changed_when: false  # ne marque pas la tâche comme modifiée
+      ignore_errors: true
+
+    - name: Lancer les services avec docker-compose si le conteneur Jenkins n'existe pas
       community.docker.docker_compose_v2:
-        project_src: /workspace/..  # Le chemin vers le fichier docker-compose.yml à la racine
-        state: present  # Utilisation de "state: present" pour démarrer les services
+        project_src: /workspace/deploiement  # Le chemin vers le fichier docker-compose.yml
+        state: present
         remove_orphans: true
-        pull: always  # Modifié pour utiliser une valeur valide
+      when: "'jenkins-test' not in jenkins_container.stdout"
 
     - name: Vérifier que le service Jenkins est bien démarré
       command: docker ps --filter "name=jenkins-test" --filter "status=running" --format "{{.Names}}"
