@@ -70,13 +70,13 @@ pipeline {
 
                     sh """
                         docker run --rm \\
-                            -v "${DEPLOY_DIR}:/workspace/deploiement:rw" \\
-                            -w /workspace/deploiement \\
+                            -v "${WORKSPACE}:/workspace:rw" \\
+                            -w /workspace \\
                             ${DOCKER_IMAGE} \\
                             /bin/bash -c '
-                                echo "📁 Contenu du dossier déploiement :"
-                                ls -al
-                                if [ -f playbook.yml ]; then
+                                echo "📁 Contenu de /workspace/deploiement :"
+                                ls -al deploiement
+                                if [ -f deploiement/playbook.yml ]; then
                                     echo "✅ Playbook trouvé"
                                 else
                                     echo "❌ playbook.yml manquant"; exit 1
@@ -94,12 +94,12 @@ pipeline {
 
                     sh """
                         docker run --rm \\
-                            -v "${DEPLOY_DIR}:/workspace/deploiement:rw" \\
+                            -v "${WORKSPACE}:/workspace:rw" \\
                             -v "$HOME/.ssh:/root/.ssh:ro" \\
                             -e ANSIBLE_HOST_KEY_CHECKING=False \\
-                            -w /workspace/deploiement \\
+                            -w /workspace \\
                             ${DOCKER_IMAGE} \\
-                            ansible-playbook playbook.yml
+                            ansible-playbook deploiement/playbook.yml
                     """
                 }
             }
