@@ -34,10 +34,10 @@
         project_src: /workspace/deploiement  # Le chemin vers le fichier docker-compose.yml
         state: present
         remove_orphans: true
-      when: jenkins_container.stdout == ""
+      when: "'jenkins-test' not in jenkins_container.stdout"
 
     - name: Vérifier que le service Jenkins est bien démarré
-      command: docker ps --filter "name=jenkins-test" --filter "status=running" --format "{{.Names}}"
+      command: docker ps --filter "name=jenkins-test" --filter "status=running"
       register: jenkins_container_check
       failed_when: "'jenkins-test' not in jenkins_container_check.stdout"
       changed_when: false
