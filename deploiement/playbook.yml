@@ -20,8 +20,8 @@
 
     - name: Lancer les services avec docker-compose
       community.docker.docker_compose_v2:
-        project_src: /workspace/deploiement/..  # Le chemin vers le fichier docker-compose.yml à la racine
-        restarted: true
+        project_src: /workspace/..  # Le chemin vers le fichier docker-compose.yml à la racine
+        state: up  # Remplacer "restarted" par "state: up" ou "state: restarted"
         remove_orphans: true
 
     - name: Vérifier que le service Jenkins est bien démarré
