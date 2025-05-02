@@ -21,7 +21,7 @@
     - name: Lancer les services avec docker-compose
       community.docker.docker_compose_v2:
         project_src: /workspace/..  # Le chemin vers le fichier docker-compose.yml à la racine
-        state: up  # Remplacer "restarted" par "state: up" ou "state: restarted"
+        state: present  # Utilisation de "state: present" pour démarrer les services
         remove_orphans: true
 
     - name: Vérifier que le service Jenkins est bien démarré
